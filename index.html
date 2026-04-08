@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#05020a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>AURA — Connection Pulse</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        base: '#05020a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* Slow background pan */
+        @keyframes slowPan {
+            0% { transform: scale(1.05) translate(0, 0); }
+            50% { transform: scale(1.08) translate(-1%, 1%); }
+            100% { transform: scale(1.05) translate(0, 0); }
+        }
+        .bg-pan { animation: slowPan 30s ease-in-out infinite; }
+
+        /* Pulse ring expansion - CSS animation, GPU-composited */
+        .pulse-ring {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            will-change: transform, opacity;
+            animation: ringExpand 1.8s ease-out forwards;
+        }
+        @keyframes ringExpand {
+            0% { transform: scale(0.5); opacity: 0.7; }
+            80% { transform: scale(5); opacity: 0; }
+            100% { transform: scale(6); opacity: 0; }
+        }
+
+        /* Sync flash overlay */
+        @keyframes syncFlash {
+            0% { opacity: 0; }
+            15% { opacity: 0.12; }
+            100% { opacity: 0; }
+        }
+
+        /* Sync text fade */
+        @keyframes syncTextReveal {
+            0% { opacity: 0; transform: translateY(8px) scale(0.95); letter-spacing: 0.3em; }
+            20% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 0.5em; }
+            70% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-4px); letter-spacing: 0.6em; }
+        }
+
+        /* Node glow pulse */
+        @keyframes glowPulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        /* Burst effects */
+        .burst-glow {
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
+            transform: scale(0.3);
+            opacity: 0;
+        }
+        .burst-glow.active {
+            transform: scale(4);
+            opacity: 0.7;
+        }
+        .burst-glow.fade {
+            transform: scale(5);
+            opacity: 0;
+        }
+
+        .burst-core {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            transform: scale(0);
+            opacity: 0;
+        }
+        .burst-core.active {
+            transform: scale(2.5);
+            opacity: 1;
+        }
+        .burst-core.fade {
+            transform: scale(3.5);
+            opacity: 0;
+        }
+
+        .burst-white {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            transform: scale(0);
+            opacity: 0;
+        }
+        .burst-white.active {
+            transform: scale(2);
+            opacity: 0.9;
+        }
+        .burst-white.fade {
+            transform: scale(3);
+            opacity: 0;
+        }
+
+        /* Particle canvas */
+        #particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Photo memory card */
+        .memory-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+        }
+        .memory-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1rem;
+            border: 1px solid rgba(255,255,255,0.08);
+            pointer-events: none;
+        }
+
+        /* Smooth scroll + prevent horizontal overflow on mobile */
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+        body { overflow-x: hidden; }
+
+        /* Photo memory pulse rings */
+        @keyframes memoryPulse {
+            0% { transform: scale(0.8); opacity: 0.6; }
+            50% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* Section transitions */
+        .section-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .section-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-base text-white selection:bg-rose-500/30">
+
+    <!-- Particle canvas -->
+    <canvas id="particles"></canvas>
+
+    <!-- ==================== HERO SECTION ==================== -->
+    <section id="experience" class="relative w-full h-[100dvh] overflow-hidden">
+
+        <!-- Background photo -->
+        <div class="absolute inset-0 w-full h-full overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2560&q=80"
+                 alt="Sunset at the beach"
+                 class="w-full h-full object-cover bg-pan opacity-80">
+            <div class="absolute inset-0 bg-gradient-to-b from-base/40 via-transparent to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-base via-base/80 to-transparent" style="height:60vh;margin-top:auto;"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,2,10,0.6)_100%)]"></div>
+        </div>
+
+        <!-- Sync flash overlay -->
+        <div id="syncFlash" class="fixed inset-0 bg-gradient-to-r from-rose-500/20 via-fuchsia-400/20 to-purple-500/20 opacity-0 pointer-events-none z-50"></div>
+
+        <!-- Header -->
+        <header class="relative z-40 w-full px-6 md:px-12 py-6 md:py-8 flex justify-between items-center" style="padding-top: max(1.5rem, env(safe-area-inset-top));">
+            <div class="text-xl font-serif tracking-widest text-white/90">AURA</div>
+            <nav class="hidden md:flex gap-8 text-sm font-medium tracking-wide text-white/60">
+                <a href="#experience" class="hover:text-white transition-colors">Experience</a>
+                <a href="#stories" class="hover:text-white transition-colors">Stories</a>
+                <a href="#journal" class="hover:text-white transition-colors">Journal</a>
+            </nav>
+            <button class="px-4 md:px-6 py-2 border border-white/20 rounded-full text-xs md:text-sm hover:bg-white hover:text-base transition-all duration-300">
+                Connect
+            </button>
+        </header>
+
+        <!-- Main content -->
+        <main class="relative z-30 flex flex-col items-center justify-center w-full h-full pb-20 pointer-events-none">
+
+            <!-- Headline -->
+            <div class="absolute top-[12%] md:top-[15%] text-center px-4">
+                <h1 class="text-3xl md:text-5xl lg:text-6xl font-serif font-light tracking-wide text-white/90 mb-4 drop-shadow-lg">
+                    When two rhythms align.
+                </h1>
+                <p class="text-white/50 font-sans tracking-widest text-xs md:text-sm uppercase">
+                    Find your frequency
+                </p>
+            </div>
+
+            <!-- Heartbeat visualization area -->
+            <div id="vizArea" class="relative w-full max-w-[800px] h-40 flex items-center justify-center px-4">
+
+                <!-- Center line -->
+                <div class="absolute w-full max-w-[600px] h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                <!-- Left node (You) -->
+                <div id="nodeLeft" class="absolute z-20 flex flex-col items-center justify-center" style="transform: translateX(-300px); opacity: 0; will-change: transform, opacity; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.4s ease;">
+                    <div class="flex flex-col items-center mb-3">
+                        <span id="bpmLeft" class="text-rose-300/90 font-mono text-xs tracking-[0.2em] drop-shadow-[0_0_8px_rgba(243,118,142,0.5)] tabular-nums">-- BPM</span>
+                        <div class="w-[1px] h-3 bg-gradient-to-b from-rose-400/50 to-transparent mt-1"></div>
+                    </div>
+                    <div id="pulseLeft" class="relative flex items-center justify-center w-4 h-4">
+                        <div class="absolute w-3 h-3 bg-rose-400 rounded-full shadow-[0_0_20px_4px_rgba(244,63,94,0.7)]"></div>
+                        <div class="absolute w-1 h-1 bg-white rounded-full opacity-80"></div>
+                    </div>
+                    <span class="text-white/30 text-[10px] tracking-[0.3em] uppercase mt-3 font-sans">romeo</span>
+                </div>
+
+                <!-- Right node (Partner) -->
+                <div id="nodeRight" class="absolute z-20 flex flex-col items-center justify-center" style="transform: translateX(300px); opacity: 0; will-change: transform, opacity; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.4s ease;">
+                    <div id="pulseRight" class="relative flex items-center justify-center w-4 h-4">
+                        <div class="absolute w-3 h-3 bg-fuchsia-400 rounded-full shadow-[0_0_20px_4px_rgba(217,70,239,0.7)]"></div>
+                        <div class="absolute w-1 h-1 bg-white rounded-full opacity-80"></div>
+                    </div>
+                    <span class="text-white/30 text-[10px] tracking-[0.3em] uppercase mt-3 font-sans">juliet</span>
+                    <div class="flex flex-col items-center mt-1">
+                        <div class="w-[1px] h-3 bg-gradient-to-t from-fuchsia-400/50 to-transparent mb-1"></div>
+                        <span id="bpmRight" class="text-fuchsia-300/90 font-mono text-xs tracking-[0.2em] drop-shadow-[0_0_8px_rgba(217,70,239,0.5)] tabular-nums">-- BPM</span>
+                    </div>
+                </div>
+
+                <!-- Burst effects (JS-triggered) -->
+                <div id="burstContainer" class="absolute z-30 flex items-center justify-center mix-blend-screen pointer-events-none">
+                    <div id="burstGlow" class="absolute w-40 md:w-64 h-40 md:h-64 rounded-full bg-gradient-to-tr from-rose-500 to-purple-600 blur-[30px] md:blur-[40px] burst-glow"></div>
+                    <div id="burstCore" class="absolute w-20 md:w-32 h-20 md:h-32 rounded-full bg-gradient-to-r from-rose-300 to-fuchsia-300 blur-[10px] md:blur-[15px] burst-core"></div>
+                    <div id="burstWhite" class="absolute w-8 md:w-12 h-8 md:h-12 rounded-full bg-white blur-[3px] md:blur-[4px] burst-white"></div>
+                </div>
+
+                <!-- Sync text -->
+                <div id="syncText" class="absolute z-40 text-center pointer-events-none opacity-0">
+                    <p class="text-white/80 font-serif italic text-lg md:text-xl tracking-[0.3em] drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">in sync</p>
+                </div>
+            </div>
+
+            <!-- Status line -->
+            <div class="absolute bottom-[22%] md:bottom-[22%] text-center">
+                <p id="statusText" class="text-white/20 font-mono text-[10px] tracking-[0.3em] uppercase transition-all duration-1000"></p>
+            </div>
+        </main>
+
+        <!-- Scroll hint -->
+        <div class="absolute bottom-4 md:bottom-8 w-full flex flex-col items-center z-40 opacity-40 hover:opacity-70 transition-opacity" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+            <a href="#stories" class="flex flex-col items-center pointer-events-auto">
+                <svg class="w-4 h-4 text-white/40 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- ==================== PHOTO MEMORY SECTION ==================== -->
+    <section id="stories" class="relative min-h-screen bg-base flex flex-col items-center justify-center py-20 px-4">
+        <div class="section-reveal max-w-lg w-full">
+
+            <!-- Section header -->
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-serif font-light tracking-wide text-white/90 mb-3">Our Moments</h2>
+                <p class="text-white/40 font-sans text-sm tracking-widest uppercase">Memories that breathe</p>
+            </div>
+
+            <!-- Memory card 1 -->
+            <div class="memory-card bg-base mb-8 shadow-2xl shadow-rose-500/5">
+                <div class="relative h-72 md:h-80 overflow-hidden rounded-t-xl">
+                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                         alt="Sunset at the beach"
+                         class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-base via-base/30 to-transparent"></div>
+
+                    <!-- Pulse overlay on photo -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <!-- Rose rings -->
+                        <div class="absolute" style="left: 35%; top: 45%;">
+                            <div class="w-3 h-3 bg-rose-400/60 rounded-full shadow-[0_0_20px_6px_rgba(244,63,94,0.4)]"></div>
+                            <div class="absolute inset-0 w-3 h-3 rounded-full border border-rose-400/30" style="animation: memoryPulse 1.5s infinite;"></div>
+                            <div class="absolute inset-0 w-3 h-3 rounded-full border border-rose-400/20" style="animation: memoryPulse 1.5s infinite 0.5s;"></div>
+                        </div>
+                        <!-- Fuchsia rings -->
+                        <div class="absolute" style="left: 60%; top: 45%;">
+                            <div class="w-3 h-3 bg-fuchsia-400/60 rounded-full shadow-[0_0_20px_6px_rgba(217,70,239,0.4)]"></div>
+                            <div class="absolute inset-0 w-3 h-3 rounded-full border border-fuchsia-400/30" style="animation: memoryPulse 1.3s infinite;"></div>
+                            <div class="absolute inset-0 w-3 h-3 rounded-full border border-fuchsia-400/20" style="animation: memoryPulse 1.3s infinite 0.43s;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Synced badge -->
+                    <div class="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
+                        <span class="text-white/70 text-[10px] font-mono tracking-[0.2em] uppercase">synced</span>
+                    </div>
+
+                    <!-- Bottom overlay with BPM -->
+                    <div class="absolute bottom-0 left-0 right-0 p-5 flex justify-between items-end">
+                        <div>
+                            <p class="text-white/90 font-serif text-lg">Venice Beach</p>
+                            <p class="text-white/40 font-mono text-xs mt-1">April 5, 2025 — 7:42 PM</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card footer -->
+                <div class="px-5 py-4 flex items-center justify-between bg-white/[0.02] rounded-b-xl">
+                    <div class="flex items-center gap-4 md:gap-6">
+                        <div class="flex items-center gap-1.5 md:gap-2">
+                            <div class="w-2 h-2 bg-rose-400 rounded-full shadow-[0_0_6px_rgba(244,63,94,0.5)]"></div>
+                            <span class="text-rose-300/80 font-mono text-[11px] md:text-xs">72 bpm</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 md:gap-2">
+                            <div class="w-2 h-2 bg-fuchsia-400 rounded-full shadow-[0_0_6px_rgba(217,70,239,0.5)]"></div>
+                            <span class="text-fuchsia-300/80 font-mono text-[11px] md:text-xs">74 bpm</span>
+                        </div>
+                    </div>
+                    <button class="text-white/30 hover:text-white/70 text-xs font-sans tracking-wider uppercase transition-colors pointer-events-auto">
+                        Share
+                    </button>
+                </div>
+            </div>
+
+            <!-- Memory card 2 -->
+            <div class="memory-card bg-base mb-8 shadow-2xl shadow-fuchsia-500/5">
+                <div class="relative h-72 md:h-80 overflow-hidden rounded-t-xl">
+                    <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                         alt="Mountain lake at dawn"
+                         class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-base via-base/30 to-transparent"></div>
+
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="absolute" style="left: 40%; top: 50%;">
+                            <div class="w-3 h-3 bg-rose-400/60 rounded-full shadow-[0_0_20px_6px_rgba(244,63,94,0.4)]"></div>
+                            <div class="absolute inset-0 w-3 h-3 rounded-full border border-rose-400/30" style="animation: memoryPulse 1.4s infinite;"></div>
+                        </div>
+                        <div class="absolute" style="left: 55%; top: 50%;">
+                            <div class="w-3 h-3 bg-fuchsia-400/60 rounded-full shadow-[0_0_20px_6px_rgba(217,70,239,0.4)]"></div>
+                            <div class="absolute inset-0 w-3 h-3 rounded-full border border-fuchsia-400/30" style="animation: memoryPulse 1.6s infinite;"></div>
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-0 left-0 right-0 p-4 md:p-5 flex justify-between items-end">
+                        <div>
+                            <p class="text-white/90 font-serif text-base md:text-lg">First Morning</p>
+                            <p class="text-white/40 font-mono text-[11px] md:text-xs mt-1">March 28, 2025 — 8:15 AM</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-4 md:px-5 py-4 flex items-center justify-between bg-white/[0.02] rounded-b-xl">
+                    <div class="flex items-center gap-4 md:gap-6">
+                        <div class="flex items-center gap-1.5 md:gap-2">
+                            <div class="w-2 h-2 bg-rose-400 rounded-full shadow-[0_0_6px_rgba(244,63,94,0.5)]"></div>
+                            <span class="text-rose-300/80 font-mono text-[11px] md:text-xs">58 bpm</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 md:gap-2">
+                            <div class="w-2 h-2 bg-fuchsia-400 rounded-full shadow-[0_0_6px_rgba(217,70,239,0.5)]"></div>
+                            <span class="text-fuchsia-300/80 font-mono text-[11px] md:text-xs">61 bpm</span>
+                        </div>
+                    </div>
+                    <button class="text-white/30 hover:text-white/70 text-xs font-sans tracking-wider uppercase transition-colors pointer-events-auto">
+                        Share
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add memory CTA -->
+            <div class="flex justify-center mt-4">
+                <button class="px-8 py-3 border border-white/10 rounded-full text-sm text-white/50 hover:text-white hover:border-white/30 transition-all duration-300 pointer-events-auto flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add a memory
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== JOURNAL SECTION ==================== -->
+    <section id="journal" class="relative min-h-[50vh] bg-base flex flex-col items-center justify-center py-20 px-4">
+        <div class="section-reveal text-center max-w-md">
+            <p class="text-white/20 font-mono text-[10px] tracking-[0.3em] uppercase mb-6">Coming Soon</p>
+            <h2 class="text-2xl md:text-3xl font-serif font-light tracking-wide text-white/70 mb-4">Your heartbeat journal</h2>
+            <p class="text-white/30 font-sans text-sm leading-relaxed">Every day, your heartbeats weave a unique pattern. Soon, AURA will turn each day into a piece of generative art you both share.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative bg-base py-8 flex justify-center z-40">
+        <p class="text-white/20 text-xs font-mono tracking-widest">AURA — 2025</p>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ---- Heartbeat Simulation Engine ----
+        const state = {
+            left: { base: 65 + Math.random() * 10, current: 0, phase: 0 },
+            right: { base: 70 + Math.random() * 10, current: 0, phase: 0 },
+            synced: false,
+            syncCooldown: 0,
+            cyclePhase: 'apart',  // apart, approaching, synced, separating
+            cycleTimer: 0,
+            t: 0,
+        };
+
+        // Simple noise function (no library needed)
+        function noise(t, seed) {
+            const x = Math.sin(t * 0.7 + seed * 100) * 43758.5453;
+            return (x - Math.floor(x)) * 2 - 1;
+        }
+
+        function smoothNoise(t, seed) {
+            const n1 = noise(t, seed);
+            const n2 = noise(t + 0.1, seed);
+            return n1 * 0.7 + n2 * 0.3;
+        }
+
+        // Update BPM values with organic drift
+        function updateHeartRates(dt) {
+            state.t += dt;
+            state.cycleTimer += dt;
+
+            // Cycle: apart(15-25s) -> approaching(8-12s) -> synced(4-6s) -> separating(5-8s)
+            switch (state.cyclePhase) {
+                case 'apart':
+                    if (state.cycleTimer > 15 + Math.random() * 10) {
+                        state.cyclePhase = 'approaching';
+                        state.cycleTimer = 0;
+                    }
+                    // Drift independently
+                    state.left.base = 65 + smoothNoise(state.t * 0.05, 1) * 8;
+                    state.right.base = 78 + smoothNoise(state.t * 0.04, 2) * 8;
+                    break;
+
+                case 'approaching':
+                    if (state.cycleTimer > 8 + Math.random() * 4) {
+                        state.cyclePhase = 'synced';
+                        state.cycleTimer = 0;
+                        triggerSync();
+                    }
+                    // Converge toward a middle value
+                    const mid = (state.left.base + state.right.base) / 2;
+                    const progress = Math.min(state.cycleTimer / 10, 1);
+                    const ease = progress * progress * (3 - 2 * progress); // smoothstep
+                    state.left.base = state.left.base + (mid - state.left.base) * ease * 0.02;
+                    state.right.base = state.right.base + (mid - state.right.base) * ease * 0.02;
+                    break;
+
+                case 'synced':
+                    if (state.cycleTimer > 4 + Math.random() * 2) {
+                        state.cyclePhase = 'separating';
+                        state.cycleTimer = 0;
+                    }
+                    // Stay close
+                    const syncMid = (state.left.base + state.right.base) / 2;
+                    state.left.base += (syncMid - state.left.base) * 0.1;
+                    state.right.base += (syncMid - state.right.base) * 0.1;
+                    break;
+
+                case 'separating':
+                    if (state.cycleTimer > 5 + Math.random() * 3) {
+                        state.cyclePhase = 'apart';
+                        state.cycleTimer = 0;
+                    }
+                    // Drift apart
+                    state.left.base += (65 - state.left.base) * 0.01 + smoothNoise(state.t * 0.1, 3) * 0.5;
+                    state.right.base += (82 - state.right.base) * 0.01 + smoothNoise(state.t * 0.1, 4) * 0.5;
+                    break;
+            }
+
+            // Add per-beat variation
+            state.left.current = Math.round(state.left.base + smoothNoise(state.t * 0.3, 5) * 3);
+            state.right.current = Math.round(state.right.base + smoothNoise(state.t * 0.3, 6) * 3);
+
+            // Clamp
+            state.left.current = Math.max(55, Math.min(100, state.left.current));
+            state.right.current = Math.max(55, Math.min(100, state.right.current));
+        }
+
+        // ---- DOM Elements ----
+        const bpmLeftEl = document.getElementById('bpmLeft');
+        const bpmRightEl = document.getElementById('bpmRight');
+        const nodeLeftEl = document.getElementById('nodeLeft');
+        const nodeRightEl = document.getElementById('nodeRight');
+        const pulseLeftEl = document.getElementById('pulseLeft');
+        const pulseRightEl = document.getElementById('pulseRight');
+        const burstGlow = document.getElementById('burstGlow');
+        const burstCore = document.getElementById('burstCore');
+        const burstWhite = document.getElementById('burstWhite');
+        const syncFlash = document.getElementById('syncFlash');
+        const syncTextEl = document.getElementById('syncText');
+        const statusText = document.getElementById('statusText');
+
+        // ---- BPM Display ----
+        function updateBPMDisplay() {
+            bpmLeftEl.textContent = state.left.current + ' BPM';
+            bpmRightEl.textContent = state.right.current + ' BPM';
+
+            const diff = Math.abs(state.left.current - state.right.current);
+            if (diff <= 5 && state.cyclePhase === 'synced') {
+                statusText.textContent = 'hearts aligned';
+                statusText.style.color = 'rgba(244,114,182,0.5)';
+            } else if (diff <= 10) {
+                statusText.textContent = 'converging';
+                statusText.style.color = 'rgba(255,255,255,0.2)';
+            } else {
+                statusText.textContent = 'listening';
+                statusText.style.color = 'rgba(255,255,255,0.15)';
+            }
+        }
+
+        // ---- Pulse Rings (CSS-animated, no per-ring rAF) ----
+        function createPulseRing(parent, color) {
+            const ring = document.createElement('div');
+            ring.className = 'pulse-ring';
+            ring.style.cssText = `
+                width: 12px; height: 12px;
+                left: 50%; top: 50%;
+                margin-left: -6px; margin-top: -6px;
+                border: 1.5px solid ${color};
+            `;
+            parent.appendChild(ring);
+            // Remove after animation completes (1.8s)
+            setTimeout(() => ring.remove(), 1900);
+        }
+
+        let lastBeatLeft = 0;
+        let lastBeatRight = 0;
+        const leftCore = pulseLeftEl.querySelector('div');
+        const rightCore = pulseRightEl.querySelector('div');
+
+        // Pre-set transitions on cores
+        if (leftCore) leftCore.style.willChange = 'transform';
+        if (rightCore) rightCore.style.willChange = 'transform';
+
+        function pulseBeat() {
+            const now = performance.now();
+            const intervalLeft = (60 / state.left.current) * 1000;
+            const intervalRight = (60 / state.right.current) * 1000;
+
+            if (now - lastBeatLeft > intervalLeft) {
+                createPulseRing(pulseLeftEl, 'rgba(251,113,133,0.5)');
+                lastBeatLeft = now;
+                if (leftCore) {
+                    leftCore.style.transition = 'transform 0.12s ease-out';
+                    leftCore.style.transform = 'scale(1.4)';
+                    setTimeout(() => { leftCore.style.transition = 'transform 0.35s ease'; leftCore.style.transform = 'scale(1)'; }, 120);
+                }
+            }
+            if (now - lastBeatRight > intervalRight) {
+                createPulseRing(pulseRightEl, 'rgba(192,132,252,0.5)');
+                lastBeatRight = now;
+                if (rightCore) {
+                    rightCore.style.transition = 'transform 0.12s ease-out';
+                    rightCore.style.transform = 'scale(1.4)';
+                    setTimeout(() => { rightCore.style.transition = 'transform 0.35s ease'; rightCore.style.transform = 'scale(1)'; }, 120);
+                }
+            }
+        }
+
+        // ---- Node Positioning (JS-driven, responsive) ----
+        function getSpread() {
+            // Scale node distance based on viewport width
+            const vw = window.innerWidth;
+            if (vw < 400) return 70;
+            if (vw < 640) return 90;
+            return 120;
+        }
+
+        function updateNodePositions() {
+            let leftX, rightX, leftOpacity, rightOpacity;
+            const spread = getSpread();
+            const noiseAmt = spread < 100 ? 10 : 20;
+
+            switch (state.cyclePhase) {
+                case 'apart':
+                    leftX = -spread - smoothNoise(state.t * 0.2, 10) * noiseAmt;
+                    rightX = spread + smoothNoise(state.t * 0.2, 11) * noiseAmt;
+                    leftOpacity = 0.9;
+                    rightOpacity = 0.9;
+                    break;
+                case 'approaching': {
+                    const p = Math.min(state.cycleTimer / 10, 1);
+                    const ease = p * p * (3 - 2 * p);
+                    leftX = -spread + ease * (spread - 12);
+                    rightX = spread - ease * (spread - 12);
+                    leftOpacity = 1;
+                    rightOpacity = 1;
+                    break;
+                }
+                case 'synced':
+                    leftX = -10 + smoothNoise(state.t * 0.5, 12) * 3;
+                    rightX = 10 + smoothNoise(state.t * 0.5, 13) * 3;
+                    leftOpacity = 1;
+                    rightOpacity = 1;
+                    break;
+                case 'separating': {
+                    const p = Math.min(state.cycleTimer / 6, 1);
+                    const ease = p * p * (3 - 2 * p);
+                    leftX = -10 - ease * (spread - 10);
+                    rightX = 10 + ease * (spread - 10);
+                    leftOpacity = 1 - ease * 0.1;
+                    rightOpacity = 1 - ease * 0.1;
+                    break;
+                }
+            }
+
+            nodeLeftEl.style.transform = `translateX(${leftX}px)`;
+            nodeLeftEl.style.opacity = leftOpacity;
+            nodeRightEl.style.transform = `translateX(${rightX}px)`;
+            nodeRightEl.style.opacity = rightOpacity;
+        }
+
+        // ---- Sync Burst ----
+        function triggerSync() {
+            // Burst glow
+            burstGlow.classList.add('active');
+            burstCore.classList.add('active');
+            burstWhite.classList.add('active');
+
+            // Flash
+            syncFlash.style.animation = 'syncFlash 1.2s ease-out forwards';
+
+            // Sync text
+            syncTextEl.style.animation = 'syncTextReveal 3s ease-out forwards';
+
+            setTimeout(() => {
+                burstGlow.classList.remove('active');
+                burstGlow.classList.add('fade');
+                burstCore.classList.remove('active');
+                burstCore.classList.add('fade');
+                burstWhite.classList.remove('active');
+                burstWhite.classList.add('fade');
+            }, 600);
+
+            setTimeout(() => {
+                burstGlow.classList.remove('fade');
+                burstCore.classList.remove('fade');
+                burstWhite.classList.remove('fade');
+                syncFlash.style.animation = '';
+                syncTextEl.style.animation = '';
+                syncTextEl.style.opacity = '0';
+            }, 3500);
+        }
+
+        // ---- Ambient Particles ----
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initParticles() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            const isMobile = canvas.width < 640;
+            const count = Math.floor((canvas.width * canvas.height) / (isMobile ? 50000 : 25000));
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: -0.1 - Math.random() * 0.2,
+                    size: 0.5 + Math.random() * 1.5,
+                    opacity: 0.1 + Math.random() * 0.25,
+                    phase: Math.random() * Math.PI * 2,
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const t = performance.now() * 0.001;
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+                if (p.x < -10) p.x = canvas.width + 10;
+                if (p.x > canvas.width + 10) p.x = -10;
+
+                const flicker = 0.7 + 0.3 * Math.sin(t * 0.5 + p.phase);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * flicker})`;
+                ctx.fill();
+            });
+        }
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+
+        // ---- Section Reveal on Scroll ----
+        const revealElements = document.querySelectorAll('.section-reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15 });
+        revealElements.forEach(el => observer.observe(el));
+
+        // ---- Main Loop ----
+        let lastTime = performance.now();
+        let lastPositionUpdate = 0;
+        let lastBpmUpdate = 0;
+
+        function loop() {
+            const now = performance.now();
+            const dt = (now - lastTime) / 1000;
+            lastTime = now;
+
+            updateHeartRates(dt);
+
+            // Throttle BPM text updates to ~4fps (avoids layout thrash)
+            if (now - lastBpmUpdate > 250) {
+                updateBPMDisplay();
+                lastBpmUpdate = now;
+            }
+
+            // Throttle node position to ~15fps (CSS transition smooths it)
+            if (now - lastPositionUpdate > 66) {
+                updateNodePositions();
+                lastPositionUpdate = now;
+            }
+
+            pulseBeat();
+            drawParticles();
+
+            requestAnimationFrame(loop);
+        }
+
+        // Kick off after a brief delay for dramatic entrance
+        setTimeout(() => {
+            state.left.current = Math.round(state.left.base);
+            state.right.current = Math.round(state.right.base);
+            loop();
+        }, 500);
+
+    })();
+    </script>
+</body>
+</html>
