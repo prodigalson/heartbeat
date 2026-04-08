@@ -1,0 +1,125 @@
+/* ISOLA - App styles */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { overflow-x: hidden; }
+body { overflow-x: hidden; background: #05020a; color: #fff; font-family: 'Inter', sans-serif; min-height: 100dvh; }
+
+/* Pulse ring CSS animation */
+.pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    will-change: transform, opacity;
+    animation: ringExpand 1.8s ease-out forwards;
+}
+@keyframes ringExpand {
+    0% { transform: scale(0.5); opacity: 0.7; }
+    80% { transform: scale(5); opacity: 0; }
+    100% { transform: scale(6); opacity: 0; }
+}
+
+/* Sync flash */
+@keyframes syncFlash {
+    0% { opacity: 0; }
+    15% { opacity: 0.15; }
+    100% { opacity: 0; }
+}
+
+/* Burst effects */
+.burst-glow {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
+    transform: scale(0.3); opacity: 0;
+}
+.burst-glow.active { transform: scale(4); opacity: 0.7; }
+.burst-glow.fade { transform: scale(5); opacity: 0; }
+
+.burst-core {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    transform: scale(0); opacity: 0;
+}
+.burst-core.active { transform: scale(2.5); opacity: 1; }
+.burst-core.fade { transform: scale(3.5); opacity: 0; }
+
+.burst-white {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    transform: scale(0); opacity: 0;
+}
+.burst-white.active { transform: scale(2); opacity: 0.9; }
+.burst-white.fade { transform: scale(3); opacity: 0; }
+
+/* Particle canvas */
+#particles {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 1;
+}
+
+/* Screen transitions */
+.screen { display: none; }
+.screen.active { display: flex; }
+
+/* Input styling */
+.code-input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 0.75rem;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    letter-spacing: 0.3em;
+    text-align: center;
+    padding: 1rem;
+    width: 100%;
+    max-width: 280px;
+    outline: none;
+    transition: border-color 0.3s ease;
+    text-transform: uppercase;
+}
+.code-input:focus {
+    border-color: rgba(244, 63, 94, 0.5);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.1);
+}
+.code-input::placeholder {
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 0.2em;
+}
+
+/* Buttons */
+.btn-primary {
+    padding: 0.75rem 2rem;
+    background: linear-gradient(135deg, #e84393, #a855f7);
+    border: none; border-radius: 2rem;
+    color: #fff; font-size: 0.875rem; font-weight: 500;
+    cursor: pointer; transition: all 0.3s ease;
+    letter-spacing: 0.05em;
+}
+.btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-outline {
+    padding: 0.75rem 2rem;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 2rem;
+    color: rgba(255,255,255,0.7); font-size: 0.875rem;
+    cursor: pointer; transition: all 0.3s ease;
+}
+.btn-outline:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+
+/* Copy button feedback */
+.copied { color: rgba(244, 114, 182, 0.8) !important; border-color: rgba(244, 114, 182, 0.3) !important; }
+
+/* Status messages */
+.status-msg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    transition: all 0.5s ease;
+}
+
+/* Photo memory */
+.memory-canvas-wrap {
+    position: relative;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+}

@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#05020a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>AURA — Connection Pulse</title>
+    <title>ISOLA — Memories with a pulse</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <script>
@@ -183,15 +183,15 @@
 
         <!-- Header -->
         <header class="relative z-40 w-full px-6 md:px-12 py-6 md:py-8 flex justify-between items-center" style="padding-top: max(1.5rem, env(safe-area-inset-top));">
-            <div class="text-xl font-serif tracking-widest text-white/90">AURA</div>
+            <div class="text-xl font-serif tracking-widest text-white/90">ISOLA</div>
             <nav class="hidden md:flex gap-8 text-sm font-medium tracking-wide text-white/60">
-                <a href="#experience" class="hover:text-white transition-colors">Experience</a>
+                <a href="app.html" class="hover:text-white transition-colors">Try the Demo</a>
                 <a href="#stories" class="hover:text-white transition-colors">Stories</a>
                 <a href="#journal" class="hover:text-white transition-colors">Journal</a>
             </nav>
-            <button class="px-4 md:px-6 py-2 border border-white/20 rounded-full text-xs md:text-sm hover:bg-white hover:text-base transition-all duration-300">
-                Connect
-            </button>
+            <a href="app.html" class="px-4 md:px-6 py-2 border border-white/20 rounded-full text-xs md:text-sm hover:bg-white hover:text-base transition-all duration-300 no-underline">
+                Try the Demo
+            </a>
         </header>
 
         <!-- Main content -->
@@ -200,10 +200,10 @@
             <!-- Headline -->
             <div class="absolute top-[12%] md:top-[15%] text-center px-4">
                 <h1 class="text-3xl md:text-5xl lg:text-6xl font-serif font-light tracking-wide text-white/90 mb-4 drop-shadow-lg">
-                    When two rhythms align.
+                    Memories with a pulse.
                 </h1>
                 <p class="text-white/50 font-sans tracking-widest text-xs md:text-sm uppercase">
-                    Find your frequency
+                    Sync you and your lover's heartbeat to a memory
                 </p>
             </div>
 
@@ -246,10 +246,6 @@
                     <div id="burstWhite" class="absolute w-8 md:w-12 h-8 md:h-12 rounded-full bg-white blur-[3px] md:blur-[4px] burst-white"></div>
                 </div>
 
-                <!-- Sync text -->
-                <div id="syncText" class="absolute z-40 text-center pointer-events-none opacity-0">
-                    <p class="text-white/80 font-serif italic text-lg md:text-xl tracking-[0.3em] drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">in sync</p>
-                </div>
             </div>
 
             <!-- Status line -->
@@ -268,13 +264,52 @@
         </div>
     </section>
 
+    <!-- ==================== HOW IT WORKS ==================== -->
+    <section class="relative bg-base py-20 md:py-28 px-4">
+        <div class="section-reveal max-w-2xl mx-auto">
+            <div class="text-center mb-14 md:mb-16">
+                <h2 class="text-3xl md:text-4xl font-serif font-light tracking-wide text-white/90 mb-3">How it works</h2>
+                <p class="text-white/40 font-sans text-sm tracking-widest uppercase">Three steps to your first memory</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+                <!-- Step 1 -->
+                <div class="text-center">
+                    <div class="w-12 h-12 mx-auto mb-5 rounded-full border border-rose-400/30 flex items-center justify-center">
+                        <span class="text-rose-400 font-mono text-sm">01</span>
+                    </div>
+                    <h3 class="text-white/90 font-serif text-lg mb-2">Connect</h3>
+                    <p class="text-white/40 font-sans text-sm leading-relaxed">Share a link with your partner. Both of you sync your wearable and your heartbeats appear in real time.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="text-center">
+                    <div class="w-12 h-12 mx-auto mb-5 rounded-full border border-fuchsia-400/30 flex items-center justify-center">
+                        <span class="text-fuchsia-400 font-mono text-sm">02</span>
+                    </div>
+                    <h3 class="text-white/90 font-serif text-lg mb-2">Capture</h3>
+                    <p class="text-white/40 font-sans text-sm leading-relaxed">Upload a photo from a moment you shared. ISOLA finds both heartbeats from that exact time and brings the memory to life.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="text-center">
+                    <div class="w-12 h-12 mx-auto mb-5 rounded-full border border-purple-400/30 flex items-center justify-center">
+                        <span class="text-purple-400 font-mono text-sm">03</span>
+                    </div>
+                    <h3 class="text-white/90 font-serif text-lg mb-2">Remember</h3>
+                    <p class="text-white/40 font-sans text-sm leading-relaxed">Your memory now has a pulse. Share it, save it, or just watch two hearts beat together over a sunset.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ==================== PHOTO MEMORY SECTION ==================== -->
     <section id="stories" class="relative min-h-screen bg-base flex flex-col items-center justify-center py-20 px-4">
         <div class="section-reveal max-w-lg w-full">
 
             <!-- Section header -->
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-serif font-light tracking-wide text-white/90 mb-3">Our Moments</h2>
+                <h2 class="text-3xl md:text-4xl font-serif font-light tracking-wide text-white/90 mb-3">Some Example Moments</h2>
                 <p class="text-white/40 font-sans text-sm tracking-widest uppercase">Memories that breathe</p>
             </div>
 
@@ -310,7 +345,7 @@
                     <!-- Bottom overlay with BPM -->
                     <div class="absolute bottom-0 left-0 right-0 p-5 flex justify-between items-end">
                         <div>
-                            <p class="text-white/90 font-serif text-lg">Venice Beach</p>
+                            <p class="text-white/90 font-serif text-lg">The First Sunset</p>
                             <p class="text-white/40 font-mono text-xs mt-1">April 5, 2025 — 7:42 PM</p>
                         </div>
                     </div>
@@ -395,13 +430,13 @@
         <div class="section-reveal text-center max-w-md">
             <p class="text-white/20 font-mono text-[10px] tracking-[0.3em] uppercase mb-6">Coming Soon</p>
             <h2 class="text-2xl md:text-3xl font-serif font-light tracking-wide text-white/70 mb-4">Your heartbeat journal</h2>
-            <p class="text-white/30 font-sans text-sm leading-relaxed">Every day, your heartbeats weave a unique pattern. Soon, AURA will turn each day into a piece of generative art you both share.</p>
+            <p class="text-white/30 font-sans text-sm leading-relaxed">Every day, your heartbeats weave a unique pattern. Soon, ISOLA will turn each day into a piece of generative art you both share.</p>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="relative bg-base py-8 flex justify-center z-40">
-        <p class="text-white/20 text-xs font-mono tracking-widest">AURA — 2025</p>
+        <p class="text-white/25 text-xs font-sans">Made for fun by a guy working on <a href="https://sensai.fit" target="_blank" rel="noopener noreferrer" class="text-white/40 underline underline-offset-2 hover:text-white/70 transition-colors">SensAI</a></p>
     </footer>
 
     <!-- ==================== JAVASCRIPT ==================== -->
@@ -505,7 +540,6 @@
         const burstCore = document.getElementById('burstCore');
         const burstWhite = document.getElementById('burstWhite');
         const syncFlash = document.getElementById('syncFlash');
-        const syncTextEl = document.getElementById('syncText');
         const statusText = document.getElementById('statusText');
 
         // ---- BPM Display ----
@@ -638,9 +672,6 @@
             // Flash
             syncFlash.style.animation = 'syncFlash 1.2s ease-out forwards';
 
-            // Sync text
-            syncTextEl.style.animation = 'syncTextReveal 3s ease-out forwards';
-
             setTimeout(() => {
                 burstGlow.classList.remove('active');
                 burstGlow.classList.add('fade');
@@ -655,8 +686,6 @@
                 burstCore.classList.remove('fade');
                 burstWhite.classList.remove('fade');
                 syncFlash.style.animation = '';
-                syncTextEl.style.animation = '';
-                syncTextEl.style.opacity = '0';
             }, 3500);
         }
 
