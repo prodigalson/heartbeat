@@ -34,5 +34,22 @@ create policy "Allow all room operations" on public.rooms
 create policy "Allow all heartbeat operations" on public.heartbeats
   for all using (true) with check (true);
 
+-- Memories table: saved photo memories
+create table if not exists public.memories (
+  id uuid default gen_random_uuid() primary key,
+  room_id uuid references public.rooms(id) on delete cascade,
+  user_id uuid not null,
+  title text not null default 'Untitled moment',
+  photo_date timestamptz,
+  bpm_left integer,
+  bpm_right integer,
+  created_at timestamptz default now()
+);
+
+alter table public.memories enable row level security;
+
+create policy "Allow all memory operations" on public.memories
+  for all using (true) with check (true);
+
 -- Enable Realtime for heartbeats table
 alter publication supabase_realtime add table public.heartbeats;

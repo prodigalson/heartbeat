@@ -7,16 +7,21 @@ function generateInviteCode() {
 async function createRoom() {
     const sb = getSupabase();
     const userId = crypto.randomUUID();
-    const inviteCode = generateInviteCode();
 
-    const { data, error } = await sb
-        .from('rooms')
-        .insert({ invite_code: inviteCode, user1_id: userId })
-        .select()
-        .single();
+    // Retry up to 3 times on invite code collision
+    for (let attempt = 0; attempt < 3; attempt++) {
+        const inviteCode = generateInviteCode();
+        const { data, error } = await sb
+            .from('rooms')
+            .insert({ invite_code: inviteCode, user1_id: userId })
+            .select()
+            .single();
 
-    if (error) throw error;
-    return { room: data, userId, inviteCode };
+        if (error && error.code === '23505') continue; // unique violation, retry
+        if (error) throw error;
+        return { room: data, userId, inviteCode };
+    }
+    throw new Error('Could not generate unique room code. Try again.');
 }
 
 async function joinRoom(inviteCode) {
@@ -43,12 +48,22 @@ async function joinRoom(inviteCode) {
     return { room: { ...room, user2_id: userId }, userId };
 }
 
+let _cleanupCounter = 0;
+
 async function writeHeartbeat(roomId, userId, bpm) {
     const sb = getSupabase();
     const { error } = await sb
         .from('heartbeats')
         .insert({ room_id: roomId, user_id: userId, bpm });
     if (error) console.warn('heartbeat write failed:', error.message);
+
+    // Cleanup old rows every ~30 writes (~90 seconds) to prevent unbounded growth
+    _cleanupCounter++;
+    if (_cleanupCounter >= 30) {
+        _cleanupCounter = 0;
+        const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString(); // keep 30 min
+        await sb.from('heartbeats').delete().eq('room_id', roomId).lt('created_at', cutoff);
+    }
 }
 
 function subscribeToHeartbeats(roomId, myUserId, onPartnerBpm) {

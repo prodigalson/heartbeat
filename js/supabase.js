@@ -10,3 +10,15 @@ function getSupabase() {
     }
     return _supabase;
 }
+
+// Quick connectivity check — call on page load for early feedback
+async function checkSupabaseConnection() {
+    try {
+        const { error } = await getSupabase().from('rooms').select('id').limit(1);
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error('Supabase connection failed:', e.message);
+        return false;
+    }
+}

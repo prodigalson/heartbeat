@@ -116,8 +116,8 @@
     (function() {
         'use strict';
 
-        const roomId = sessionStorage.getItem('isola_room');
-        const userId = sessionStorage.getItem('isola_user');
+        const roomId = localStorage.getItem('isola_room');
+        const userId = localStorage.getItem('isola_user');
 
         // Redirect if no room
         if (!roomId) {
@@ -125,10 +125,73 @@
             return;
         }
 
+        // ---- EXIF date extraction (lightweight, no library) ----
+        function extractExifDate(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const view = new DataView(e.target.result);
+                    // Check for JPEG SOI marker
+                    if (view.getUint16(0) !== 0xFFD8) { resolve(null); return; }
+                    let offset = 2;
+                    while (offset < view.byteLength - 2) {
+                        const marker = view.getUint16(offset);
+                        if (marker === 0xFFE1) { // APP1 (EXIF)
+                            const exifData = parseExifDate(view, offset + 4);
+                            resolve(exifData);
+                            return;
+                        }
+                        const segLen = view.getUint16(offset + 2);
+                        offset += 2 + segLen;
+                    }
+                    resolve(null);
+                };
+                reader.readAsArrayBuffer(file.slice(0, 65536)); // Only read first 64KB
+            });
+        }
+
+        function parseExifDate(view, start) {
+            // Look for "Exif" header
+            const exifStr = String.fromCharCode(view.getUint8(start), view.getUint8(start+1), view.getUint8(start+2), view.getUint8(start+3));
+            if (exifStr !== 'Exif') return null;
+            const tiffStart = start + 6;
+            const isLE = view.getUint16(tiffStart) === 0x4949;
+            const get16 = (o) => isLE ? view.getUint16(o, true) : view.getUint16(o);
+            const get32 = (o) => isLE ? view.getUint32(o, true) : view.getUint32(o);
+            const ifdOffset = get32(tiffStart + 4);
+            const ifdStart = tiffStart + ifdOffset;
+            const entries = get16(ifdStart);
+            for (let i = 0; i < entries; i++) {
+                const entryOffset = ifdStart + 2 + i * 12;
+                const tag = get16(entryOffset);
+                if (tag === 0x0132 || tag === 0x9003) { // DateTime or DateTimeOriginal
+                    const valOffset = get32(entryOffset + 8);
+                    const dateStr = readAscii(view, tiffStart + valOffset, 19);
+                    // Format: "YYYY:MM:DD HH:MM:SS"
+                    const match = dateStr.match(/(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+                    if (match) {
+                        return new Date(+match[1], +match[2]-1, +match[3], +match[4], +match[5], +match[6]);
+                    }
+                }
+            }
+            return null;
+        }
+
+        function readAscii(view, offset, length) {
+            let s = '';
+            for (let i = 0; i < length && offset + i < view.byteLength; i++) {
+                s += String.fromCharCode(view.getUint8(offset + i));
+            }
+            return s;
+        }
+
         // ---- Photo Upload ----
-        window.handlePhotoUpload = function(e) {
+        window.handlePhotoUpload = async function(e) {
             const file = e.target.files[0];
             if (!file) return;
+
+            // Try EXIF date extraction first
+            const exifDate = await extractExifDate(file);
 
             const reader = new FileReader();
             reader.onload = function(ev) {
@@ -136,9 +199,8 @@
                 document.getElementById('uploadArea').classList.add('hidden');
                 document.getElementById('memoryPreview').classList.remove('hidden');
 
-                // Try to get EXIF date
-                const now = new Date();
-                document.getElementById('memoryDate').textContent = formatDate(now);
+                const photoDate = exifDate || new Date();
+                document.getElementById('memoryDate').textContent = formatDate(photoDate);
 
                 // Fetch BPMs from DB for this room
                 fetchRecentBpms();
@@ -178,11 +240,34 @@
         // ---- Save Memory ----
         window.saveMemory = async function() {
             const title = document.getElementById('memoryTitle').value || 'Untitled moment';
+            const bpmLeftText = document.getElementById('memBpmLeft').textContent;
+            const bpmRightText = document.getElementById('memBpmRight').textContent;
+            const bpmLeft = parseInt(bpmLeftText) || null;
+            const bpmRight = parseInt(bpmRightText) || null;
             const status = document.getElementById('memoryStatus');
-            status.textContent = 'Memory saved.';
+
+            try {
+                const sb = getSupabase();
+                const { error } = await sb
+                    .from('memories')
+                    .insert({
+                        room_id: roomId,
+                        user_id: userId,
+                        title: title,
+                        photo_date: new Date().toISOString(),
+                        bpm_left: bpmLeft,
+                        bpm_right: bpmRight,
+                    });
+                if (error) throw error;
+
+                status.textContent = 'Memory saved.';
+                status.style.color = 'rgba(244,114,182,0.6)';
+            } catch (e) {
+                status.textContent = 'Failed to save: ' + e.message;
+                status.style.color = 'rgba(244,63,94,0.6)';
+            }
             status.classList.remove('hidden');
-            status.style.color = 'rgba(244,114,182,0.6)';
-            setTimeout(() => status.classList.add('hidden'), 3000);
+            setTimeout(() => status.classList.add('hidden'), 4000);
         };
 
         window.resetMemory = function() {

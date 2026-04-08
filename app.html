@@ -149,6 +149,11 @@
             document.getElementById(id).classList.add('active');
         }
 
+        // ---- Connection check ----
+        checkSupabaseConnection().then(ok => {
+            if (!ok) showError('Cannot reach server. Check your connection.');
+        });
+
         // ---- Auto-join from URL ----
         const params = new URLSearchParams(window.location.search);
         const urlRoom = params.get('room');
@@ -165,13 +170,22 @@
                 roomId = result.room.id;
                 userId = result.userId;
                 inviteCode = result.inviteCode;
-                sessionStorage.setItem('isola_room', roomId);
-                sessionStorage.setItem('isola_user', userId);
+                localStorage.setItem('isola_room', roomId);
+                localStorage.setItem('isola_user', userId);
 
                 document.getElementById('inviteCodeDisplay').textContent = inviteCode;
                 showScreen('screenWaiting');
 
-                // Listen for partner to join
+                // Start heartbeat writes immediately so partner sees data on join
+                mySimulator = new HeartbeatSimulator(62, 78);
+                writeInterval = setInterval(() => {
+                    if (mySimulator) {
+                        mySimulator.update(0.1);
+                        writeHeartbeat(roomId, userId, mySimulator.current);
+                    }
+                }, 3000);
+
+                // Listen for partner to join, then switch to live view
                 subscribeToRoomJoin(roomId, () => {
                     startLive();
                 });
@@ -191,8 +205,8 @@
                 const result = await joinRoom(code);
                 roomId = result.room.id;
                 userId = result.userId;
-                sessionStorage.setItem('isola_room', roomId);
-                sessionStorage.setItem('isola_user', userId);
+                localStorage.setItem('isola_room', roomId);
+                localStorage.setItem('isola_user', userId);
                 startLive();
             } catch (e) {
                 showError(e.message);
@@ -230,7 +244,8 @@
         // ---- Live Visualization ----
         function startLive() {
             showScreen('screenLive');
-            mySimulator = new HeartbeatSimulator(62, 78);
+            // Reuse existing simulator/interval if creator already started them
+            if (!mySimulator) mySimulator = new HeartbeatSimulator(62, 78);
 
             // Elements
             const bpmL = document.getElementById('liveBpmLeft');
@@ -258,12 +273,14 @@
                 partnerLastSeen = Date.now();
             });
 
-            // Write my BPM to Supabase every 3 seconds
-            writeInterval = setInterval(() => {
-                if (mySimulator) {
-                    writeHeartbeat(roomId, userId, mySimulator.current);
-                }
-            }, 3000);
+            // Write my BPM to Supabase every 3 seconds (skip if already running from waiting screen)
+            if (!writeInterval) {
+                writeInterval = setInterval(() => {
+                    if (mySimulator) {
+                        writeHeartbeat(roomId, userId, mySimulator.current);
+                    }
+                }, 3000);
+            }
 
             function getSpread() {
                 const vw = window.innerWidth;
